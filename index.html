@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="paintframe"></canvas>
+    <section id="tools">
+        <section id="t_colors">
+            <label for="color">
+                Brush Color:
+            </label>
+            <input type="color" value="#000000" id="color" oninput="BrushManager.SetBrushColor(this.value)">
+            <br>
+            <label for="alpha">
+                Brush Transparency:
+            </label>
+            <input type="range" value="0" step="0.01" id="alpha" oninput="BrushManager.SetBrushAlpha(this.value)">
+        </section>
+        <section id="t_size">
+            <label for="size">
+                Brush Size:
+            </label>
+            <input type="range" value="0" step="10" id="size" min="1" max="400"
+                oninput="BrushManager.SetBrushSize(this.value)">
+        </section>
+        <canvas id="showbrush"></canvas>
+        <section id="buttons">
+            <button id="reset" onclick="CanvasManager.canvasReset()">Reset Canvas</button>
+            <button id="save" onclick="CanvasManager.saveCanvas()">Save Canvas</button>
+        </section>
+    </section>
+
+    <script>
+        // canvas manager singleton(no idea how to write it in js) 
+        let CanvasManager = {
+            canvas: "null",
+
+            DefaultCanvas() {
+                this.canvas.width = "900";
+                this.canvas.height = "900";
+            },
+
+            canvasReset() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
+        let Showbrush = {
+            ShowBrush(toshow) {
+                this.shower = document.querySelector("#showbrush");
+                this.ctx = shower.getContext("2d");
+            }
+        }
+
+        class Brush {
+            constructor(name, drawmethod) {
+                this.name = name;
+                this.drawmethod = () => { drawmethod() };
+            }
+        }
+
+        const BrushTypes = {
+            Normal: 0,
+            AirBrush: 1,
+            Curve: 2,
+            Cube: 3,
+        }
+
+        // brush manager singleton
+        let BrushManager = {
+            brushes: Object.create(null),
+            current_color: "#000000",
+            current_size: "1",
+            current_alpha: ".1",
+
+            CreateBrush(Brush_type, name, drawmethod) {
+                this.brushes[Brush_type] = new Brush(name, drawmethod);
+            },
+
+            GetBrush(Brush_type) {
+                console.log(this.brushes[Brush_type]);
+                return this.brushes[Brush_type];
+            },
+
+            SetBrushSize(size) {
+                this.current_size = size;
+            },
+
+            SetBrushColor(color) {
+                this.current_color = color;
+            },
+
+            SetBrushAlpha(alpha) {
+                this.current_alpha = alpha * 0.01;
+            }
+
+        }
+
+        // data saver singleton
+        let DataSaveManager = {
+        }
+
+        // main 
+        // Start of the web, when loads we reference canvas and its context into canvas manager
+        window.addEventListener("load", () => {
+            CanvasManager.canvas = document.querySelector("#paintframe");
+            CanvasManager.ctx = CanvasManager.canvas.getContext("2d");
+            CanvasManager.DefaultCanvas();
+
+
+
+            BrushManager.CreateBrush(BrushTypes.Normal, "Normal", () => {
+                CanvasManager.canvas.addEventListener("mousemove", (e) => {
+                    if (!this.isPainting) {
+                        return;
+                    }
+                    CanvasManager.ctx.globalAlpha = BrushManager.current_alpha;
+                    CanvasManager.ctx.strokeStyle = BrushManager.current_color;
+                    CanvasManager.ctx.lineWidth = BrushManager.current_size;
+                    CanvasManager.ctx.lineCap = 'square';
+                    CanvasManager.ctx.lineTo(e.clientX, e.clientY);
+                    CanvasManager.ctx.stroke();
+                })
+
+                CanvasManager.canvas.addEventListener("mousedown", () => {
+                    this.isPainting = true;
+                })
+
+                CanvasManager.canvas.addEventListener("mouseup", () => {
+                    this.isPainting = false;
+                    CanvasManager.ctx.stroke();
+                    CanvasManager.ctx.beginPath();
+                })
+            });
+            BrushManager.CreateBrush(BrushTypes.Cube, "Cube", () => {
+                console.log("test");
+            })
+
+
+
+            BrushManager.GetBrush(BrushTypes.Normal).drawmethod();
+        })
+
+
+
+    </script>
+</body>
+<style>
+    #paintframe {
+        float: left;
+        border: black 1px solid;
+    }
+
+    #showbrush {
+        background-color: wheat;
+        border-radius: 10px;
+        margin: 10px;
+    }
+
+    #tools {
+        position: relative;
+        border-radius: 10px;
+        background-color: aquamarine;
+        float: right;
+    }
+
+    #buttons {
+        display: flex;
+        
+        width: 60px;
+        position: absolute;
+        left: 20px;
+        bottom: 10px;
+        margin-top: 5px;
+    }
+    
+    #buttons button {
+        border: 1px solid black;
+        border-radius: 10px;
+    }
+
+    #alpha {
+        position: absolute;
+        right: 20px;
+    }
+
+    #size {
+        position: absolute;
+        right: 20px;
+    }
+</style>
+
+</html>
