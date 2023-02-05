@@ -9,7 +9,9 @@
 </head>
 
 <body>
-    <canvas id="paintframe"></canvas>
+    <section id="frameholder">
+        <canvas id="paintframe"></canvas>
+    </section>
     <section id="tools">
         <section id="t_colors">
             <label for="color">
@@ -34,13 +36,18 @@
             <button id="reset" onclick="CanvasManager.canvasReset()">Reset Canvas</button>
             <button id="save" onclick="CanvasManager.saveCanvas()">Save Canvas</button>
         </section>
+        <section id="saveholder">
+        </section>
+        <section id="brushes">
+
+        </section>
     </section>
 
     <script>
         // canvas manager singleton(no idea how to write it in js) 
         let CanvasManager = {
             canvas: "null",
-
+            counter: 0,
             DefaultCanvas() {
                 this.canvas.width = "900";
                 this.canvas.height = "900";
@@ -48,7 +55,12 @@
 
             canvasReset() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
+            },
+
+            createNewCanvas() {
+                this.canvasReset();
+                this.counter++;
+            },
         }
 
         let Showbrush = {
@@ -69,7 +81,7 @@
             Normal: 0,
             AirBrush: 1,
             Curve: 2,
-            Cube: 3,
+            Square: 3,
         }
 
         // brush manager singleton
@@ -78,9 +90,15 @@
             current_color: "#000000",
             current_size: "1",
             current_alpha: ".1",
+            currnet_brush: "null",
 
             CreateBrush(Brush_type, name, drawmethod) {
                 this.brushes[Brush_type] = new Brush(name, drawmethod);
+                const brushselector = document.createElement("button");
+                brushselector.innerHTML = name;
+                brushselector.onclick = () => {
+                    
+                }
             },
 
             GetBrush(Brush_type) {
@@ -104,6 +122,21 @@
 
         // data saver singleton
         let DataSaveManager = {
+            saves: [],
+
+            saveCanvas() {
+                const savloc = document.querySelector("#saveholder");
+                let button = document.createElement("button");
+                button.innerHTML = "Load Save : " + CanvasManager.counter;
+                button.value = CanvasManager.counter;
+                button.onclick = () => {
+                }
+                CanvasManager.createNewCanvas();
+            },
+
+            extractCanvas(id) {
+
+            }
         }
 
         // main 
@@ -113,9 +146,9 @@
             CanvasManager.ctx = CanvasManager.canvas.getContext("2d");
             CanvasManager.DefaultCanvas();
 
-
-
+            
             BrushManager.CreateBrush(BrushTypes.Normal, "Normal", () => {
+                BrushManager.currnet_brush = this;
                 CanvasManager.canvas.addEventListener("mousemove", (e) => {
                     if (!this.isPainting) {
                         return;
@@ -126,6 +159,7 @@
                     CanvasManager.ctx.lineCap = 'square';
                     CanvasManager.ctx.lineTo(e.clientX, e.clientY);
                     CanvasManager.ctx.stroke();
+                    BrushManager.currnet_brush_move = false;
                 })
 
                 CanvasManager.canvas.addEventListener("mousedown", () => {
@@ -138,8 +172,8 @@
                     CanvasManager.ctx.beginPath();
                 })
             });
-            BrushManager.CreateBrush(BrushTypes.Cube, "Cube", () => {
-                console.log("test");
+            BrushManager.CreateBrush(BrushTypes.Square, "Square", () => {
+                
             })
 
 
@@ -153,8 +187,16 @@
 </body>
 <style>
     #paintframe {
+        z-index: 10000;
         float: left;
         border: black 1px solid;
+    }
+
+    #frameholder {
+        display: block;
+        width: 1000px;
+        height: 1000px;
+        float: left;
     }
 
     #showbrush {
@@ -172,14 +214,14 @@
 
     #buttons {
         display: flex;
-        
+
         width: 60px;
         position: absolute;
         left: 20px;
         bottom: 10px;
         margin-top: 5px;
     }
-    
+
     #buttons button {
         border: 1px solid black;
         border-radius: 10px;
